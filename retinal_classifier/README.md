@@ -1,60 +1,61 @@
-# Retinal Image Classifier (Azure Custom Vision)
+# Retinal Image Classifier
 
-A small proof-of-concept pipeline for classifying retinal fundus
-images, using Azure Custom Vision as the training/deployment
-platform. Chosen deliberately over training a PyTorch model from
-scratch: with a small labeled dataset and limited time, Custom
-Vision's transfer-learning backend gets a working, deployed
-classifier in under an hour, and still requires understanding the
-same CV pipeline stages (collect -> preprocess -> label -> train ->
-evaluate -> deploy).
+A small proof-of-concept binary classifier for retinal fundus images
+(No DR vs. Moderate DR), trained locally with PyTorch using transfer
+learning on a pretrained ResNet18.
 
 ## Dataset
 
 Sample images pulled from the [APTOS 2019 Blindness Detection]
 (https://www.kaggle.com/competitions/aptos2019-blindness-detection/data)
 dataset on Kaggle (public, requires free Kaggle account). Only a
-small subset (~15-20 images per class) was used here as a
-proof-of-concept — not the full competition dataset.
+small subset (~20 images per class) was used here as a
+proof-of-concept — not the full competition dataset, which is far
+larger than needed for a demo like this.
 
 Classes used: `No_DR` (no diabetic retinopathy) and `Moderate_DR`.
 
 ## Pipeline steps
 
-1. **Collect** — download a small labeled subset from Kaggle.
-2. **Preprocess** — run `preprocess.py` to resize, center-crop, and
-   contrast-enhance each image before upload.
-3. **Label / Train** — upload processed images to a Custom Vision
-   project via the web portal, tag each by class, and train.
-4. **Evaluate** — review precision/recall per tag in the Custom
-   Vision portal's Performance tab.
-5. **Deploy** — publish the trained iteration to a prediction
-   endpoint.
-6. **Test via code** — `predict.py` calls that endpoint from Python
-   and prints the predicted class probabilities.
+1. **Collect** — small labeled subset selected from Kaggle via a
+   Jupyter notebook (filtering `train.csv` by diagnosis label).
+2. **Preprocess** — `preprocess.py` resizes, center-crops, and
+   contrast-enhances each image.
+3. **Train** — `train.py` fine-tunes a pretrained ResNet18's final
+   layer on our two classes (transfer learning), with an 80/20
+   train/validation split.
+4. **Evaluate** — validation accuracy is printed each epoch during
+   training.
+5. **Predict** — `predict_local.py` loads the saved model and runs
+   inference on a new image.
 
-## How to reproduce (step-by-step)
+## How to reproduce
 
-1. Go to https://www.customvision.ai and sign in with a Microsoft
-   account (Azure free tier is enough).
-2. Create a new project: Project Type = **Classification**,
-   Classification Type = **Multiclass**, Domain = **General**.
-3. Upload preprocessed images, adding one tag per class as you go
-   (`No_DR`, `Moderate_DR`).
-4. Click **Train** (Quick Training).
-5. Check the **Performance** tab for precision/recall per tag.
-6. Click **Publish**, name the iteration, and note down:
-   - the **Prediction URL** (goes in `AZURE_CV_ENDPOINT_URL`)
-   - the **Prediction Key** (goes in `AZURE_CV_PREDICTION_KEY`)
-7. Run `python predict.py --image ../data/processed/sample.jpg`
+```
+python retinal_classifier/preprocess.py --input_dir data/raw/No_DR --output_dir data/processed/No_DR
+python retinal_classifier/preprocess.py --input_dir data/raw/Moderate_DR --output_dir data/processed/Moderate_DR
+python -m retinal_classifier.train
+python -m retinal_classifier.predict_local --image data/processed/No_DR/<some_image>.png
+```
+
+## Why transfer learning
+
+With only ~40 labeled images total, training a CNN from scratch
+would badly overfit. Freezing a pretrained backbone (already trained
+on ImageNet) and only retraining the final layer lets the model
+reuse general visual features instead of trying to learn them from
+a tiny dataset.
 
 ## Known limitations / next steps
 
-- Trained on a very small sample (~15-20 images/class) as a
-  proof-of-concept, not a clinically meaningful sample size.
-- No cross-validation; Custom Vision's built-in train/test split was
-  used as-is.
-- With more time, next steps would be: a larger labeled sample, a
-  custom PyTorch/TensorFlow model (e.g. fine-tuned ResNet) for more
-  control over the architecture, and deployment via Azure ML managed
-  endpoints instead of Custom Vision for more flexibility.
+- Trained on a very small sample (~40 images total) as a
+  proof-of-concept, not a clinically meaningful sample size — real
+  validation accuracy on this scale should be read as noisy, not a
+  reliable performance estimate.
+- No k-fold cross-validation, no data augmentation yet.
+- `predict.py` (kept in this folder) is a ready-to-use client for an
+  Azure Custom Vision prediction endpoint. It wasn't used for this
+  version — deployment went with a local PyTorch model instead — but
+  it's a natural next step: fine-tune the full network (not just the
+  last layer) on a larger sample, then deploy via Azure ML for a
+  managed, scalable endpoint.
