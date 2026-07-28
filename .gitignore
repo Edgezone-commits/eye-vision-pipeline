@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+.env
+retinal_classifier/data/
+*.jpg
+*.png
+!retinal_classifier/sample_output/*.png
