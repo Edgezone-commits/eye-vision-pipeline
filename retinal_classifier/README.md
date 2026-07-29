@@ -38,6 +38,7 @@ python -m retinal_classifier.train
 python -m retinal_classifier.predict_local --image data/processed/No_DR/<some_image>.png
 ```
 
+
 ## Why transfer learning
 
 With only ~40 labeled images total, training a CNN from scratch
