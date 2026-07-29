@@ -5,7 +5,7 @@ and retinal image analysis: a real-time gaze estimator (webcam +
 MediaPipe) and a retinal fundus image classifier (PyTorch transfer
 learning) deployed as a live Streamlit web app.
 
-**Live demo:** [add your Streamlit app URL here]
+**Live demo:** https://eye-vision-pipeline-8upzaawhrkdrwrly4ysysv.streamlit.app/
 
 ## Modules
 
