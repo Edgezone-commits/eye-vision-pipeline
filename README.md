@@ -9,7 +9,12 @@ and retinal image analysis: a real-time gaze estimator (webcam +
 MediaPipe) and a retinal fundus image classifier (PyTorch transfer
 learning) deployed as a live Streamlit web app.
 
+
 **Live demo:** [https://eye-vision-pipeline-8upzaawhrkdrwrly4ysysv.streamlit.app/](https://eye-vision-pipeline-8upzaawhrkdrwrly4ysysv.streamlit.app/)
+
+
+**Live demo:** https://eye-vision-pipeline-8upzaawhrkdrwrly4ysysv.streamlit.app/
+
 
 ## Modules
 
@@ -49,11 +54,13 @@ Streamlit web app wrapping the retinal classifier: upload a fundus
 image, get live predictions in-browser. Deployed for free on
 Streamlit Community Cloud, connected directly to this repo.
 
+
 ![Streamlit App](app_screenshot.png)
 
 ## Setup
 
 **Web app / retinal classifier only (lighter install):**
+
 ```
 git clone https://github.com/Edgezone-commits/eye-vision-pipeline.git
 cd eye-vision-pipeline
@@ -90,3 +97,4 @@ claim experience I don't have.
   step would be finishing that deployment, or moving to Azure ML for
   a fully custom-trained model on a larger dataset.
 - No data augmentation or cross-validation yet.
+
