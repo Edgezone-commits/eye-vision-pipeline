@@ -2,50 +2,46 @@
 
 Two small computer-vision proof-of-concepts exploring eye tracking
 and retinal image analysis: a real-time gaze estimator (webcam +
-MediaPipe) and a retinal image classifier deployed via Azure Custom
-Vision.
+MediaPipe) and a retinal fundus image classifier (PyTorch transfer
+learning) deployed as a live Streamlit web app.
+
+**Live demo:** [add your Streamlit app URL here]
 
 ## Modules
 
 ### `gaze_tracker/`
 Real-time gaze direction estimation from a webcam feed.
 - **Pipeline:** capture frame -> detect iris/eye-corner landmarks
-  (MediaPipe Face Mesh) -> compute horizontal gaze ratio -> classify
-  as LEFT / RIGHT / CENTER -> overlay on video.
-- **Run it:** `python -m gaze_tracker.main`
+  (MediaPipe Face Mesh, `refine_landmarks=True`) -> compute horizontal
+  gaze ratio per eye -> classify as LEFT / RIGHT / CENTER -> overlay
+  on video.
+- **Run it:** `python -m gaze_tracker.main` (press `q` to quit, `l`
+  to log a reading to `gaze_log.csv`)
 - **Known limitations:** no per-user calibration, sensitive to head
   pose and lighting. A production system would calibrate per user
   and/or use a trained regression model instead of a fixed geometric
   threshold.
 
 ### `retinal_classifier/`
-Retinal fundus image classifier, trained and deployed through Azure
-Custom Vision, tested via a small Python client. See
-`retinal_classifier/README.md` for the full walkthrough and dataset
-source.
+Binary classifier (No DR vs. Moderate DR) for retinal fundus images,
+trained locally with PyTorch using transfer learning on a pretrained
+ResNet18. See `retinal_classifier/README.md` for the full pipeline
+walkthrough and dataset source.
+- **Pipeline:** collect (APTOS 2019 sample, ~40 images) -> preprocess
+  (OpenCV: crop, resize, CLAHE contrast enhancement) -> train
+  (frozen ResNet18 backbone, retrained final layer) -> evaluate
+  (80/20 train/val split) -> predict.
+- **Train it:** `python -m retinal_classifier.train`
+- **Predict locally:** `python -m retinal_classifier.predict_local --image <path>`
+- Also includes `predict.py`, a ready-to-use client for an Azure
+  Custom Vision prediction endpoint — written but not deployed (see
+  Next steps).
+
+### `app.py`
+Streamlit web app wrapping the retinal classifier: upload a fundus
+image, get live predictions in-browser. Deployed for free on
+Streamlit Community Cloud, connected directly to this repo.
 
 ## Setup
 
-```
-git clone <this repo>
-cd eye-vision-pipeline
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-## Why these two modules
-
-Built while exploring the tools listed for an eye-tracking /
-retinal-scanning computer vision role: OpenCV, MediaPipe, a deep
-learning framework, and Azure. I hadn't worked with retinal imaging
-or Azure Cognitive Services before this, so the retinal classifier
-module doubled as a first hands-on pass at both.
-
-## Next steps
-
-- Add per-user calibration to the gaze tracker.
-- Replace Custom Vision with a custom-trained PyTorch model on a
-  larger retinal dataset, deployed via Azure ML.
-- Add automated evaluation scripts (accuracy/precision/recall logging)
-  instead of manual review in the Custom Vision portal.
+**Web app / retinal classifier only (lighter install):**
